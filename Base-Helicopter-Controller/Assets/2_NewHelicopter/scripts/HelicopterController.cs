@@ -98,8 +98,19 @@ namespace NewHelicopter
         private void OnEnable()
         {
             zmqSub.StartSubscriber(ip, updateInterval, ReadMessage);
+            ZmqSubscriberExample.Instance.OnGestureReceived += HandleGestureReceived;
         }
 
+        void Start() {
+            // Subscribe to gesture events
+            ZmqSubscriberExample.Instance.OnGestureReceived += HandleGestureReceived;
+        }
+
+        void OnDisable() {
+            // Unsubscribe to avoid memory leaks
+            if (ZmqSubscriberExample.Instance != null)
+                ZmqSubscriberExample.Instance.OnGestureReceived -= HandleGestureReceived;
+        }
 
         public HelicopterController()
         {
@@ -115,50 +126,37 @@ namespace NewHelicopter
             string msg = System.Text.Encoding.ASCII.GetString(bytes);
             Debug.Log("Received: " + msg);
 
-            if (msg == lastAction)
-            {
+            HandleGestureReceived(msg);
+        }
+
+        void HandleGestureReceived(string gesture) {
+            // This method is your existing ReadMessage logic
+            // Treat the gesture string the same way you handle ZMQ messages now
+            
+            if (gesture == lastAction) {
                 count += 1f;
             }
-            else
-            {
+            else {
                 count = 0f;
             }
-
-            //Todo: check the msg if correct
-            lastAction = msg;
-
-
-            if (msg == "F")
-            {
-                direct = "Go forward";
-                directionText.text = "Action: " + direct;
+        
+            lastAction = gesture;
+        
+            switch (gesture) {
+                case "F":
+                    direct = "Go forward";
+                    directionText.text = "Action: " + direct;
+                    break;
+                case "OK":
+                    direct = "Stay there";
+                    directionText.text = "Action: " + direct;
+                    break;
+                case "D":
+                    direct = "Go Down";
+                    directionText.text = "Action: " + direct;
+                    break;
+                // Add other gesture cases...
             }
-            else if(msg == "OK")
-            {
-                direct = "Stay there";
-                directionText.text = "Action: " + direct;
-            }
-            else if(msg == "D")
-            {
-                direct = "Go Down";
-                directionText.text = "Action: " + direct;
-            }
-            else if(msg == "U")
-            {
-                direct = "Go up";
-                directionText.text = "Action: " + direct;
-            }
-            else if(msg == "L")
-            {
-                direct = "Tourn left";
-                directionText.text = "Action: " + direct;
-            }
-            else if (msg == "R")
-            {
-                direct = "Tourn right";
-                directionText.text = "Action: " + direct;
-            }
-            timeSinceMessage = 0;
         }
 
         private float distanceToGround ;
